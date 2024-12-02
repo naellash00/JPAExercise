@@ -45,6 +45,61 @@ public class UserService {
         return true;
     }
 
+    public boolean isValidUserID(String userID) {
+        for (TheUser user : userRepository.findAll()) {
+            if (user.getId().equals(userID)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean checkUserBalance(String userID, double amount) {
+        for (TheUser user : userRepository.findAll()) {
+            if (user.getId().equals(userID)) {
+                if (user.getBalance() >= amount) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void deductPriceFromUserBalance(Integer userID, double productPrice) {
+        for (TheUser user : userRepository.findAll()) {
+            if (user.getId().equals(userID)) {
+                user.setBalance(user.getBalance() - productPrice);
+                userRepository.save(user);
+            }
+        }
+    }
+
+    public Integer sendGift(Integer senderUserID, String receiverUsername, double moneyGiftAmount) {
+        boolean canSend = false;
+        for (TheUser user : userRepository.findAll()) {
+            if (user.getId().equals(senderUserID)) {
+                if (user.getBalance() >= moneyGiftAmount) {
+                    canSend = true;
+                } else return 2; // balance not enough
+            }
+
+        }
+        if (!canSend) // if cansend is still false, then it didnt even find the sender id
+            return 1; //incorrect id
+
+        for (TheUser user : userRepository.findAll()) {
+            if (user.getUsername().equals(receiverUsername)) {
+                if (canSend) {
+                    deductPriceFromUserBalance(senderUserID, moneyGiftAmount);
+                    user.setBalance(user.getBalance() + moneyGiftAmount);
+                    userRepository.save(user);
+                    return 3; // gift sent successfully
+                }
+            }
+        }
+        return 4; //incorrect username
+    }
+
 }
 
 
